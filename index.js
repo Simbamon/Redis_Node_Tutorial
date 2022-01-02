@@ -32,7 +32,22 @@ async function getReposNumber(req, res, next) {
     }
 }
 
-app.get('/repos/:username', getReposNumber)
+function cache(req, res, next) {
+    console.log("Cache hit")
+    const { username } = req.params
+    
+    RedisClient.get(username, (err, data) => {
+        if(err) throw err;
+
+        if(data !== null){
+            res.send(setResponse(username, data))
+        } 
+        else {
+            next()
+        }
+    })
+}
+app.get('/repos/:username', cache, getReposNumber)
 
 app.listen(PORT, () => {
     console.log(`Example app listening at http://localhost:${PORT}`)
